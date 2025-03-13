@@ -1,7 +1,12 @@
-package com.example.redis_demo;
+package com.example.redis_demo.controller;
 
 
+
+import com.example.redis_demo.model.User;
+import com.example.redis_demo.service.UserService;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/users")
@@ -12,21 +17,26 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("/addUser/cache")
+    @PostMapping
     public String saveUser(@RequestBody User user) {
         userService.saveUser(user);
-        return "User saved!";
+        return "User saved successfully in Redis!";
     }
 
     @GetMapping("/{id}")
-    public String getUser(@PathVariable String id) {
+    public User getUser(@PathVariable String id) {
         return userService.getUser(id);
+    }
+
+    @GetMapping
+    public Map<String, User> getAllUsers() {
+        return userService.getAllUsers();
     }
 
     @DeleteMapping("/{id}")
     public String deleteUser(@PathVariable String id) {
         userService.deleteUser(id);
-        return "User deleted!";
+        return "User deleted from Redis!";
     }
 }
 
