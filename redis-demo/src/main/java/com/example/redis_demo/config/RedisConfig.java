@@ -1,34 +1,36 @@
 package com.example.redis_demo.config;
 
-import com.example.redis_demo.model.User;
+
+
+import com.example.redis_demo.subscriber.MessageSubscriber;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.data.redis.listener.PatternTopic;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
+import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 @Configuration
 public class RedisConfig {
 
     @Bean
-    public RedisTemplate<String, User> redisTemplate(RedisConnectionFactory connectionFactory) {
-        RedisTemplate<String, User> template = new RedisTemplate<>();
-        template.setConnectionFactory(connectionFactory);
+    public RedisMessageListenerContainer redisMessageListenerContainer(
+            RedisConnectionFactory connectionFactory,
+            MessageListenerAdapter messageListenerAdapter) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(connectionFactory);
+        container.addMessageListener(messageListenerAdapter, new PatternTopic("chat"));
+        return container;
+    }
 
-//        // Set key serializer (store keys as plain text)
-//        template.setKeySerializer(new StringRedisSerializer());
-//
-//        // Set value serializer (store objects as JSON)
-//        template.setValueSerializer(new GenericJackson2JsonRedisSerializer());
-        // Use StringRedisSerializer for keys
-        template.setKeySerializer(new StringRedisSerializer());
+    @Bean
+    public MessageListenerAdapter messageListenerAdapter(MessageSubscriber subscriber) {
+        return new MessageListenerAdapter(subscriber, "onMessage");
+    }
 
-        // Use Jackson for JSON serialization of values
-        template.setValueSerializer(new Jackson2JsonRedisSerializer<>(User.class));
-
-        return template;
+    @Bean
+    public StringRedisTemplate stringRedisTemplate(RedisConnectionFactory connectionFactory) {
+        return new StringRedisTemplate(connectionFactory);
     }
 }
-
